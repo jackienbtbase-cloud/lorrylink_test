@@ -1009,16 +1009,16 @@ const app = {
             const contactText = driver ? `${driver.contact_person} (${driver.phone})` : "N/A";
             const timeText = new Date().toLocaleTimeString('en-US', { hour12: true });
 
-            const components = [
+           const components = [
                 {
                     "type": "body",
                     "parameters": [
-                        { "type": "text", "text": routeText },
-                        { "type": "text", "text": poText },
-                        { "type": "text", "text": driverName },
-                        { "type": "text", "text": contactText },
-                        { "type": "text", "text": `${actionType} - RM ${price}` },
-                        { "type": "text", "text": timeText }
+                        { "type": "text", "name": "route", "text": routeText },
+                        { "type": "text", "name": "po_number", "text": poText },
+                        { "type": "text", "name": "transporter", "text": driverName },
+                        { "type": "text", "name": "contact", "text": contactText },
+                        { "type": "text", "name": "price", "text": `${actionType} - RM ${price}` },
+                        { "type": "text", "name": "time", "text": timeText }
                     ]
                 }
             ];
