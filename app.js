@@ -999,7 +999,7 @@ const app = {
             const { data: job } = await supabaseClient.from('jobs').select('po_number, source_loc, dest_loc').eq('id', jobId).single();
             const { data: driver } = await supabaseClient.from('transporters').select('company_name, contact_person, phone').eq('id', this.currentUser.id).single();
 
-            const ACCESS_TOKEN = 'EAAfPKcbesHUBSvcROxjHYhBO1GIk5O6K8v8fTfcPQ4uuvavzhQeJHJcuZB4dzW65BoubybbyRQs944hXTyDc1nC1snMeJVjil2CotHepwLkcMO6CrX6o2vpMVS4nivLZB91D7bBss5KZCPwd236eb0o8NZAHaE0znjZCnA2EKyB1zlIpYqhHF56twmyx9sQESh7Y9io207JyOagXpQDLwauzr8eRqBwyVJYrGx3iXwktQtEj6ozDxYdZAIBt3OhbwL4OIOF2tQYJvrCtZApKkknCjqSegZDZD';
+            const ACCESS_TOKEN = 'EAAfPKcbesHUBSjUUzfgLpGkmgsZAwIcoLlQ43zZAMsxqIHuCoONA4elEkhlqx954AXdBLQqvGZAdZCZC6LgZCR5XkIzQ0ohUjHR9eyqqNvwyxvA38dGI5Wi1eYGRoJs4jeAG7ZAUXSX2HSalZC7i1aBoKaXCZC3MUbgZB9lL0jvXmc3IxAwVLsxUejwEw3HIkSx8lZBhwZDZD';
             const PHONE_NUMBER_ID = '1383909324803872'; 
             const adminPhones = ['60106650461']; // 填入你们 Admin 的电话列表
 
