@@ -387,6 +387,8 @@ const app = {
         } else {
             alert("Job accepted successfully! Awaiting NBT approval.");
             this.fetchJobsForTransporter(); 
+			// 加入这行：触发 WhatsApp 通知
+            this.sendAdminWhatsAppAlert("Quick Accept", jobId, offeredPrice);
         }
     },
 	
@@ -443,8 +445,7 @@ const app = {
         this.showView('counterOffer');
     },
 	
-    async submitCounterOffer(e) {
-        e.preventDefault();
+    async submitCounterOffer(e) Counter-offer submitted successfully!
         const newPrice = parseFloat(document.getElementById('counter-price').value);
         const newDate = document.getElementById('counter-date').value;
 
@@ -493,6 +494,8 @@ const app = {
             alert("Counter-offer submitted successfully!");
             document.getElementById('counter-offer-form').reset();
             this.showTransporterBoard(); 
+			// 加入这行：触发 WhatsApp 通知
+            this.sendAdminWhatsAppAlert("Counter-Offer", this.currentCounterJobId, newPrice);
         }
     },
 	
@@ -996,7 +999,7 @@ const app = {
             return;
         }
         
-        this.renderRecentMarketActivity(jobs);
+        this.(jobs);
     },
 
     renderRecentMarketActivity(jobs) {
@@ -1005,7 +1008,60 @@ const app = {
             container.innerHTML = '<p class="text-gray-400 text-xs italic">No recent market activity yet.</p>';
             return;
         }
-        
+        // --- WHATSAPP NOTIFICATION ---
+    async sendAdminWhatsAppAlert(actionType, jobId, price) {
+        try {
+            // 1. 从数据库实时抓取这个订单的路线和司机的名字/电话
+            const { data: job } = await supabaseClient.from('jobs').select('po_number, source_loc, dest_loc').eq('id', jobId).single();
+            const { data: driver } = await supabaseClient.from('transporters').select('company_name, contact_person, phone').eq('id', this.currentUser.id).single();
+
+            // 2. 填入你的 Meta 凭证
+            const ACCESS_TOKEN = 'EAAfPKcbesHUBSvcROxjHYhBO1GIk5O6K8v8fTfcPQ4uuvavzhQeJHJcuZB4dzW65BoubybbyRQs944hXTyDc1nC1snMeJVjil2CotHepwLkcMO6CrX6o2vpMVS4nivLZB91D7bBss5KZCPwd236eb0o8NZAHaE0znjZCnA2EKyB1zlIpYqhHF56twmyx9sQESh7Y9io207JyOagXpQDLwauzr8eRqBwyVJYrGx3iXwktQtEj6ozDxYdZAIBt3OhbwL4OIOF2tQYJvrCtZApKkknCjqSegZDZD'; // 换成你刚才复制的 Token
+            const PHONE_NUMBER_ID = '1383909324803872'; // 换成你的 Phone Number ID
+            const adminPhones = ['60106650461']; // 你们 4 个 Admin 的电话
+
+            // 3. 准备模板数据
+            const routeText = job ? `${job.source_loc} -> ${job.dest_loc}` : "Unknown Route";
+            const poText = job && job.po_number ? job.po_number : "N/A";
+            const driverName = driver ? driver.company_name : "Unknown Driver";
+            const contactText = driver ? `${driver.contact_person} (${driver.phone})` : "N/A";
+            const timeText = new Date().toLocaleTimeString('en-US', { hour12: true });
+
+            const components = [
+                {
+                    "type": "body",
+                    "parameters": [
+                        { "type": "text", "text": routeText },
+                        { "type": "text", "text": poText },
+                        { "type": "text", "text": driverName },
+                        { "type": "text", "text": contactText },
+                        { "type": "text", "text": `${actionType} - RM ${price}` },
+                        { "type": "text", "text": timeText }
+                    ]
+                }
+            ];
+
+            const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
+
+            // 4. 发送给 4 个 Admin
+            for (const phone of adminPhones) {
+                const payload = {
+                    "messaging_product": "whatsapp",
+                    "to": phone,
+                    "type": "template",
+                    "template": { "name": "tst", "language": { "code": "en" }, "components": components }
+                };
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(err => console.error("WhatsApp API Error:", err));
+            }
+        } catch (error) {
+            console.error("Failed to prepare WhatsApp alert:", error);
+        }
+    }
         container.innerHTML = jobs.map(job => {
             // Format the job posted date
             let postedDate = 'Unknown date';
