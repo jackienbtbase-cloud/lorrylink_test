@@ -527,6 +527,7 @@ const app = {
                     <span>Items:</span>
                     <span><i class="ri-box-3-line"></i> ${quantity} ${itemDesc}</span>
                 </div>
+                ${job.unloading_service ? `<div class="mt-0.5"><span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded inline-block w-max"><i class="ri-hand-coin-line"></i> Unloading Required</span></div>` : ''}
                 <div class="flex justify-between text-xs font-semibold opacity-80 mt-0.5">
                     <span>Remarks:</span>
                     <span class="text-right max-w-[70%] break-words"><i class="ri-sticky-note-line"></i> ${remarks}</span>
@@ -767,7 +768,9 @@ const app = {
                    <div class="flex flex-col gap-1 text-sm mb-3">
 					    <div class="font-bold text-gray-800 text-base flex flex-col items-start gap-1">
 					        <span class="flex items-center gap-1">${job.source_loc}${job.source_maps_link ? `<a href="${job.source_maps_link}" target="_blank" class="text-blue-500 hover:text-blue-700" title="View Source"><i class="ri-map-pin-user-fill text-lg"></i></a>` : ''}</span>
-					        <i class="ri-arrow-down-line text-blue-400 ml-2"></i> 
+					        <div class="w-full flex justify-center py-0.5 text-blue-400">
+					            <i class="ri-arrow-down-line font-bold text-lg"></i>
+					        </div>
 					        <span class="flex items-center gap-1">${job.dest_loc}${job.dest_maps_link ? `<a href="${job.dest_maps_link}" target="_blank" class="text-blue-500 hover:text-blue-700" title="View Destination"><i class="ri-map-pin-user-fill text-lg"></i></a>` : ''}</span>
 					    </div>
 					</div>
@@ -886,7 +889,7 @@ const app = {
                         <i class="ri-map-pin-line text-gray-400"></i> ${job.source_loc}
                         ${job.source_maps_link ? `<a href="${job.source_maps_link}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="View on Maps"><i class="ri-map-pin-user-fill text-lg"></i></a>` : ''}
                     </p>
-					<div class="text-blue-500 ml-1 py-1">
+					<div class="w-full flex justify-center py-1 text-blue-500">
 				        <i class="ri-arrow-down-line font-bold text-lg"></i>
 				    </div>
                     <p class="font-semibold flex items-center gap-1">
