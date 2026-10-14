@@ -1,13 +1,10 @@
 // ==========================================
 // 1. SUPABASE CONFIGURATION
 // ==========================================
-// REPLACE THESE TWO LINES WITH YOUR ACTUAL SUPABASE URL AND ANON KEY
 const SUPABASE_URL = 'https://cqbuguapyeyshujhkvky.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxYnVndWFweWV5c2h1amhrdmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTI5NTQsImV4cCI6MjEwMDI2ODk1NH0.C2EuPMe1ijXCcgJ300iGs-yjyVOs4lC-TuwGu33WAsc'; 
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Define the NBT Admin Email (Change this to the email you created in Step 1)
 const NBT_ADMIN_EMAIL = 'pyh@nbt.com';
 
 // ==========================================
@@ -45,7 +42,6 @@ const app = {
     banTimer: null,
 
     async init() {
-        // Setup Form Listeners
         document.getElementById('login-form').addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('register-form').addEventListener('submit', (e) => this.handleRegister(e));
         document.getElementById('post-job-form').addEventListener('submit', (e) => this.submitNewJob(e));
@@ -53,7 +49,6 @@ const app = {
 		document.getElementById('counter-offer-form').addEventListener('submit', (e) => this.submitCounterOffer(e));
         btnLogout.addEventListener('click', () => this.handleLogout());
 
-        // Check if user is already logged in (Session persistence)
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
             this.routeUser(session.user);
@@ -63,13 +58,11 @@ const app = {
     },
 
     // --- AUTHENTICATION FUNCTIONS ---
-
     async handleLogin(e) {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
 
-        // Supabase Login
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
@@ -87,7 +80,6 @@ const app = {
         const email = document.getElementById('reg-email').value;
         const password = document.getElementById('reg-password').value;
 
-        // 1. Create Auth User AND pass custom metadata to the backend
         const { data, error } = await supabaseClient.auth.signUp({ 
             email, 
             password,
@@ -105,7 +97,6 @@ const app = {
             return;
         }
 
-        // 2. Success Alert (No need for manual profile insert here)
         alert("Registration successful! Please check your mailbox to confirm your email (make sure to check your spam folder too!).");
         document.getElementById('register-form').reset();
         this.showView('login');
@@ -117,7 +108,6 @@ const app = {
         this.currentUser = null;
         this.currentUserRole = null;
         
-        // Hide navs and button
         btnLogout.classList.add('hidden');
         navs.container.classList.add('hidden');
         navs.nbt.classList.replace('flex', 'hidden');
@@ -131,7 +121,6 @@ const app = {
         e.preventDefault();
         const email = document.getElementById('forgot-email').value;
 
-        // Ask Supabase to send a password reset email
         const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/update-password.html` 
         });
@@ -146,13 +135,11 @@ const app = {
     },
 
     // --- ROUTING & ROLE MANAGEMENT ---
-
     async routeUser(user) {
         this.currentUser = user;
         btnLogout.classList.remove('hidden');
         navs.container.classList.remove('hidden');
 
-        // Check if NBT Admin
         if (user.email === NBT_ADMIN_EMAIL) {
             this.currentUserRole = 'nbt';
             this.showView('nbtHome');
@@ -160,10 +147,8 @@ const app = {
             navs.transporter.classList.replace('flex', 'hidden');
             this.fetchJobsForNBT();
         } else {
-            // Otherwise, it's a Transporter
             this.currentUserRole = 'transporter';
             
-            // FETCH PROFILE BAN STATUS
             const { data: profile } = await supabaseClient
                 .from('transporters')
                 .select('status, banned_until')
@@ -229,8 +214,8 @@ const app = {
             .update({ last_active_at: new Date().toISOString() })
             .eq('id', this.currentUser.id);
     },
-    // --- UTILS & DB FUNCTIONS ---
 
+    // --- UTILS & DB FUNCTIONS ---
     showView(viewName) {
         Object.values(views).forEach(view => {
             if(view) view.classList.add('hidden');
@@ -244,7 +229,6 @@ const app = {
     async fetchJobsForNBT() {
         nbtJobsContainer.innerHTML = '<p class="text-gray-500">Loading jobs...</p>';
         
-        // Fetch jobs, but exclude any that have an 'archived' status
         const { data: jobs, error } = await supabaseClient
             .from('jobs')
             .select('*')
@@ -262,7 +246,6 @@ const app = {
         this.renderTransporterJobs(jobs);
     },
 
-    // --- NEW: File Upload Helper ---
     async uploadJobPhoto(fileInputId) {
         const fileInput = document.getElementById(fileInputId);
         if (!fileInput || !fileInput.files || fileInput.files.length === 0) return null;
@@ -289,18 +272,15 @@ const app = {
         return publicUrlData.publicUrl;
     },
 
-    // --- UPDATED: Submit Job with Photos ---
     async submitNewJob(e) {
         e.preventDefault();
         
-        // Show loading state (uploading images takes a moment)
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerText;
         submitBtn.innerText = 'Uploading & Publishing...';
         submitBtn.disabled = true;
         submitBtn.classList.add('opacity-75');
 
-        // Upload photos first
         const photo1Url = await this.uploadJobPhoto('job-photo-1');
         const photo2Url = await this.uploadJobPhoto('job-photo-2');
 
@@ -322,7 +302,6 @@ const app = {
 
         const { error } = await supabaseClient.from('jobs').insert([newJob]);
         
-        // Restore button state
         submitBtn.innerText = originalText;
         submitBtn.disabled = false;
         submitBtn.classList.remove('opacity-75');
@@ -342,7 +321,6 @@ const app = {
             alert("Your account is currently suspended. You cannot accept or bid on jobs.");
             return;
         }
-        // --- 1. VALIDATION CHECK ---
         const { data: existingBids, error: fetchError } = await supabaseClient
             .from('bids')
             .select('proposed_price')
@@ -355,21 +333,17 @@ const app = {
         }
 
         if (existingBids && existingBids.length > 0) {
-            // Check if they already quick accepted (bid price equals original offer)
             const hasQuickAccepted = existingBids.some(bid => bid.proposed_price === offeredPrice);
             if (hasQuickAccepted) {
                 alert("You have already accepted this job, please wait for approval");
                 return;
             }
-            
-            // Check if they previously placed a counter-offer that was actually LOWER than the quick accept price
             const lowestPreviousBid = Math.min(...existingBids.map(b => b.proposed_price));
             if (offeredPrice >= lowestPreviousBid) {
                 alert("Invalid bid = Counteroffer price cannot be higher than your previous bid");
                 return;
             }
         }
-        // --- END VALIDATION ---
 
         if (!confirm("Are you sure you want to accept this job for RM " + offeredPrice + "?")) return;
 
@@ -387,7 +361,6 @@ const app = {
         } else {
             alert("Job accepted successfully! Awaiting NBT approval.");
             this.fetchJobsForTransporter(); 
-			// 加入这行：触发 WhatsApp 通知
             this.sendAdminWhatsAppAlert("Quick Accept", jobId, offeredPrice);
         }
     },
@@ -397,7 +370,6 @@ const app = {
             alert("Your account is currently suspended. You cannot accept or bid on jobs.");
             return;
         }
-        // --- 1. INSTANT VALIDATION CHECK ---
         const { data: existingBids, error: fetchError } = await supabaseClient
             .from('bids')
             .select('proposed_price')
@@ -409,27 +381,23 @@ const app = {
             return;
         }
 
-        // If they already have bids, check if one of them was a quick accept
         if (existingBids && existingBids.length > 0) {
             const hasQuickAccepted = existingBids.some(bid => bid.proposed_price === originalPrice);
             if (hasQuickAccepted) {
                 alert("You have already accepted this job, please wait for approval");
-                return; // Stops the function here so the form never opens
+                return; 
             }
         }
-        // --- END VALIDATION ---
 
-        // Save these in the background so submitCounterOffer can validate the rules later
         this.currentCounterJobId = jobId;
         this.currentCounterOriginalPrice = originalPrice; 
 
         document.getElementById('counter-job-id').value = jobId;
-        document.getElementById('counter-price').value = originalPrice; // Default to original price
+        document.getElementById('counter-price').value = originalPrice; 
         
         const dateInput = document.getElementById('counter-date');
-        dateInput.value = originalDate; // Default to original date
+        dateInput.value = originalDate; 
 
-        // Calculate +/- 3 days for the min/max limits
         const baseDate = new Date(originalDate);
         
         const minDate = new Date(baseDate);
@@ -438,7 +406,6 @@ const app = {
         const maxDate = new Date(baseDate);
         maxDate.setDate(baseDate.getDate() + 3);
 
-        // Apply HTML min/max constraints (formatted as YYYY-MM-DD)
         dateInput.min = minDate.toISOString().split('T')[0];
         dateInput.max = maxDate.toISOString().split('T')[0];
         
@@ -446,10 +413,10 @@ const app = {
     },
 	
     async submitCounterOffer(e) {
+        e.preventDefault();
         const newPrice = parseFloat(document.getElementById('counter-price').value);
         const newDate = document.getElementById('counter-date').value;
 
-        // --- 1. VALIDATION CHECK ---
         const { data: existingBids, error: fetchError } = await supabaseClient
             .from('bids')
             .select('proposed_price')
@@ -462,21 +429,18 @@ const app = {
         }
 
         if (existingBids && existingBids.length > 0) {
-            // Check if they already quick accepted previously
             const hasQuickAccepted = existingBids.some(bid => bid.proposed_price === this.currentCounterOriginalPrice);
             if (hasQuickAccepted) {
                 alert("You have already accepted this job, please wait for approval");
                 return;
             }
 
-            // Check if the new price is equal to or higher than their lowest previous bid
             const lowestPreviousBid = Math.min(...existingBids.map(b => b.proposed_price));
             if (newPrice >= lowestPreviousBid) {
                 alert("Invalid bid = Counteroffer price cannot be higher than your previous bid");
                 return;
             }
         }
-        // --- END VALIDATION ---
 
         const newBid = {
             job_id: this.currentCounterJobId,
@@ -494,7 +458,6 @@ const app = {
             alert("Counter-offer submitted successfully!");
             document.getElementById('counter-offer-form').reset();
             this.showTransporterBoard(); 
-			// 加入这行：触发 WhatsApp 通知
             this.sendAdminWhatsAppAlert("Counter-Offer", this.currentCounterJobId, newPrice);
         }
     },
@@ -504,7 +467,6 @@ const app = {
         const container = document.getElementById('bids-container');
         container.innerHTML = '<p class="text-sm text-gray-500">Loading bids...</p>';
 
-        // 1. Fetch the original job to get the NBT offered price, date, locations, items, AND po_number
         const { data: job, error: jobError } = await supabaseClient
             .from('jobs')
             .select('offered_price, delivery_date, source_loc, dest_loc, quantity, item_desc, po_number, photo_1_url, photo_2_url, source_maps_link, dest_maps_link, remarks, created_at, unloading_service')
@@ -516,7 +478,6 @@ const app = {
             return;
         }
 
-        // 2. Fetch bids for this specific job
         const { data: bids, error } = await supabaseClient
             .from('bids')
             .select('*')
@@ -537,7 +498,6 @@ const app = {
         const poNumber = job.po_number || 'N/A'; 
         const remarks = job.remarks || 'None'; 
 
-        // Calculate posted date
         const postedAt = job.created_at ? new Date(job.created_at).toLocaleString('en-MY', { 
             day: '2-digit', month: 'short', year: 'numeric', 
             hour: '2-digit', minute: '2-digit', hour12: true 
@@ -555,7 +515,6 @@ const app = {
                     </div>
                     <span class="text-[10px] font-bold bg-blue-200 text-blue-900 px-2 py-0.5 rounded shadow-sm">PO: ${poNumber}</span>
                 </div>
-                
                 <div class="flex justify-between font-bold text-sm mt-1">
                     <span>Original Budget:</span>
                     <span>RM ${originalPrice}</span>
@@ -568,17 +527,14 @@ const app = {
                     <span>Items:</span>
                     <span><i class="ri-box-3-line"></i> ${quantity} ${itemDesc}</span>
                 </div>
-                
                 <div class="flex justify-between text-xs font-semibold opacity-80 mt-0.5">
                     <span>Remarks:</span>
                     <span class="text-right max-w-[70%] break-words"><i class="ri-sticky-note-line"></i> ${remarks}</span>
                 </div>
-
                 <div class="flex justify-between text-xs font-semibold opacity-80 mt-0.5">
                     <span>Posted On:</span>
                     <span><i class="ri-time-line"></i> ${postedAt}</span>
                 </div>
-
                 ${(job.photo_1_url || job.photo_2_url) ? `
                     <div class="flex gap-2 mt-2 pt-2 border-t border-blue-200/50">
                         ${job.photo_1_url ? `<a href="${job.photo_1_url}" target="_blank" class="block h-12 w-12 overflow-hidden rounded border border-blue-200 shadow-sm hover:opacity-80"><img src="${job.photo_1_url}" class="h-full w-full object-cover"></a>` : ''}
@@ -680,10 +636,10 @@ const app = {
         
         container.innerHTML = html;
     },
+
     async awardJob(bidId, jobId, acceptedPrice) {
         if (!confirm("Are you sure you want to award the job to this transporter?")) return;
 
-        // 1. Update the winning bid status to 'accepted'
         const { error: bidError } = await supabaseClient
             .from('bids')
             .update({ status: 'accepted' })
@@ -694,12 +650,11 @@ const app = {
             return;
         }
 
-        // 2. Update the job status to 'assigned' AND save the accepted price
         const { error: jobError } = await supabaseClient
             .from('jobs')
             .update({ 
                 status: 'assigned',
-                accepted_price: acceptedPrice // <-- NEW: Saves the final agreed price
+                accepted_price: acceptedPrice
             })
             .eq('id', jobId);
 
@@ -710,13 +665,12 @@ const app = {
 
         alert("Job awarded successfully!");
         this.showView('nbtHome');
-        this.fetchJobsForNBT(); // Refresh NBT dashboard
+        this.fetchJobsForNBT();
     },
 	
 	async deleteJob(jobId) {
         if (!confirm("Are you sure you want to remove this job from your view? (It will be safely kept in the database).")) return;
 
-        // Soft delete: Update the status to 'archived' instead of deleting the row
         const { error } = await supabaseClient
             .from('jobs')
             .update({ status: 'archived' })
@@ -726,50 +680,47 @@ const app = {
             alert("Error removing job: " + error.message);
         } else {
             alert("Job successfully removed from view.");
-            this.fetchJobsForNBT(); // Refresh the dashboard
+            this.fetchJobsForNBT();
         }
     },
 
-		    async unassignJob(jobId) {
-		    if (!confirm("Are you sure you want to undo this assignment? The job will be returned to the open market.")) return;
-		
-		    // 1. Add .select() to force the database to return the updated rows
-		    const { data: updatedJob, error: jobError } = await supabaseClient
-		        .from('jobs')
-		        .update({ 
-		            status: 'open',
-		            accepted_price: null 
-		        })
-		        .eq('id', jobId)
-		        .select(); // <-- Critical: Forces returning the result
-		
-		    if (jobError) {
-		        alert("Error unassigning job: " + jobError.message);
-		        return;
-		    }
-		
-		    // 2. Catch "silent fails" caused by RLS where 0 rows are updated
-		    if (!updatedJob || updatedJob.length === 0) {
-		        alert("❌ Undo Failed: The database blocked the update.\nPossible reasons:\n1. Supabase RLS (Row Level Security) policies restrict your permission to update this job.\n2. The 'accepted_price' column is missing in your 'jobs' table, or it is set to 'Not Null'.");
-		        return;
-		    }
-		
-		    // 3. Revert the accepted bid back to 'submitted'
-		    await supabaseClient
-		        .from('bids')
-		        .update({ status: 'submitted' })
-		        .eq('job_id', jobId)
-		        .eq('status', 'accepted');
-		
-		    alert("Job assignment undone. It is now open for bids again.");
-		    this.fetchJobsForNBT(); // Refresh the dashboard
-		},
+    async unassignJob(jobId) {
+        if (!confirm("Are you sure you want to undo this assignment? The job will be returned to the open market.")) return;
+        
+        const { data: updatedJob, error: jobError } = await supabaseClient
+            .from('jobs')
+            .update({ 
+                status: 'open',
+                accepted_price: null 
+            })
+            .eq('id', jobId)
+            .select(); 
+        
+        if (jobError) {
+            alert("Error unassigning job: " + jobError.message);
+            return;
+        }
+        
+        if (!updatedJob || updatedJob.length === 0) {
+            alert("❌ Undo Failed: The database blocked the update.");
+            return;
+        }
+        
+        await supabaseClient
+            .from('bids')
+            .update({ status: 'submitted' })
+            .eq('job_id', jobId)
+            .eq('status', 'accepted');
+        
+        alert("Job assignment undone. It is now open for bids again.");
+        this.fetchJobsForNBT();
+    },
+
     // --- RENDER HTML FUNCTIONS ---
 	async fetchMyJobs() {
         const container = document.getElementById('my-jobs-container');
         container.innerHTML = '<p class="text-gray-500 text-sm">Loading your assigned jobs...</p>';
 
-        // Fetch accepted bids for this transporter, and expand the related job details in one query!
         const { data: bids, error } = await supabaseClient
             .from('bids')
             .select('*, jobs(*)')
@@ -795,12 +746,10 @@ const app = {
 
         container.innerHTML = bids.map(bid => {
             const job = bid.jobs;
-            if (!job) return ''; // Safety fallback
+            if (!job) return ''; 
 
-            // Check if the transporter proposed a new date, otherwise use the original
             const finalDate = bid.proposed_date || job.delivery_date;
 
-            // --- 新增：转换并格式化任务发布时间 ---
             const postedDate = job.created_at ? new Date(job.created_at).toLocaleString('en-MY', { 
                 day: '2-digit', month: 'short', year: 'numeric', 
                 hour: '2-digit', minute: '2-digit', hour12: true 
@@ -809,7 +758,6 @@ const app = {
             return `
                 <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
                     <div class="flex justify-between items-start mb-2">
-                        <!-- 新增：用 flex-col 把 Agreed Delivery 和 Posted 放在一起 -->
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-gray-500">Agreed Delivery: ${finalDate}</span>
                             <span class="text-[10px] font-semibold text-gray-400 mt-0.5"><i class="ri-time-line"></i> Posted: ${postedDate}</span>
@@ -832,11 +780,9 @@ const app = {
                     <p class="text-xs text-gray-500 mb-2 bg-gray-50 p-2 rounded border border-gray-100">Remarks: ${job.remarks || 'None'}</p>
                    <hr class="mb-3 border-gray-100">
 					<div class="flex justify-between items-center">
-					    <!-- 使用 flex-col 将 Jumbo Bags 和 Unloading Required 绑定在左侧上下排列 -->
 					    <div class="flex flex-col gap-1">
 					        <span class="text-sm font-semibold text-gray-600"><i class="ri-box-3-line"></i> ${job.quantity} ${job.item_desc}</span>${job.unloading_service ? `<span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded inline-block w-max"><i class="ri-hand-coin-line"></i> Unloading Required</span>` : ''}
 					    </div>
-					    
 					    <div class="text-right flex flex-col items-end">
 					        <span class="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Your Price</span>
 					        <span class="font-bold text-xl text-blue-700 leading-none">RM ${bid.proposed_price}</span>
@@ -870,9 +816,7 @@ const app = {
 							    <i class="ri-arrow-right-line text-blue-600 font-bold mx-1.5 text-base"></i> 
 							    <span>${job.dest_loc}</span>${job.dest_maps_link ? `<a href="${job.dest_maps_link}" target="_blank" class="text-blue-500 hover:text-blue-700 mx-0.5" title="View Destination"><i class="ri-map-pin-user-fill text-[18px]"></i></a>` : ''}
 							</h3>
-                            <!-- NEW: Added PO Number -->
                             <p class="text-xs font-bold text-blue-700 mt-1"><i class="ri-file-list-3-line"></i> PO: ${job.po_number || 'N/A'}</p>
-                            
                             <p class="text-xs text-gray-500 mt-1"><i class="ri-calendar-line text-gray-400"></i> Date: ${job.delivery_date}</p>
                             <p class="text-xs text-gray-500 mt-0.5"><i class="ri-box-3-line text-gray-400"></i> Items: ${job.quantity} ${job.item_desc}</p>
 							${job.unloading_service ? `<span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded mt-1 inline-block w-max"><i class="ri-hand-coin-line"></i> Unloading Required</span>` : ''}
@@ -985,12 +929,11 @@ const app = {
         
         container.innerHTML = '<p class="text-gray-400 text-xs">Loading recent history...</p>';
         
-        // Fetch the last 5 awarded jobs for price anchoring
         const { data: jobs, error } = await supabaseClient
             .from('jobs')
             .select('*')
             .eq('status', 'assigned')
-            .order('created_at', { ascending: false }) // <-- CHANGED from updated_at to created_at
+            .order('created_at', { ascending: false })
             .limit(5);
             
         if (error) {
@@ -999,10 +942,10 @@ const app = {
             return;
         }
         
-        this.(jobs);this.renderRecentMarketActivity(jobs);
+        this.renderRecentMarketActivity(jobs);
     },
 
-   renderRecentMarketActivity(jobs) {
+    renderRecentMarketActivity(jobs) {
         const container = document.getElementById('recent-activity-container');
         if (jobs.length === 0) {
             container.innerHTML = '<p class="text-gray-400 text-xs italic">No recent market activity yet.</p>';
@@ -1010,7 +953,6 @@ const app = {
         }
         
         container.innerHTML = jobs.map(job => {
-            // Format the job posted date
             let postedDate = 'Unknown date';
             if (job.created_at) {
                 const dateObj = new Date(job.created_at);
@@ -1047,23 +989,20 @@ const app = {
                 </div>
             `;
         }).join('');
-    }, // <--- 注意：原代码就是少了这里的一个逗号，导致报错
+    },
 
     // ==========================================
     // --- WHATSAPP NOTIFICATION ---
     // ==========================================
     async sendAdminWhatsAppAlert(actionType, jobId, price) {
         try {
-            // 1. 从数据库实时抓取这个订单的路线和司机的名字/电话
             const { data: job } = await supabaseClient.from('jobs').select('po_number, source_loc, dest_loc').eq('id', jobId).single();
             const { data: driver } = await supabaseClient.from('transporters').select('company_name, contact_person, phone').eq('id', this.currentUser.id).single();
 
-            // 2. 填入你的 Meta 凭证
             const ACCESS_TOKEN = 'EAAfPKcbesHUBSvcROxjHYhBO1GIk5O6K8v8fTfcPQ4uuvavzhQeJHJcuZB4dzW65BoubybbyRQs944hXTyDc1nC1snMeJVjil2CotHepwLkcMO6CrX6o2vpMVS4nivLZB91D7bBss5KZCPwd236eb0o8NZAHaE0znjZCnA2EKyB1zlIpYqhHF56twmyx9sQESh7Y9io207JyOagXpQDLwauzr8eRqBwyVJYrGx3iXwktQtEj6ozDxYdZAIBt3OhbwL4OIOF2tQYJvrCtZApKkknCjqSegZDZD';
             const PHONE_NUMBER_ID = '1383909324803872'; 
-            const adminPhones = ['60106650461']; // 你们 Admin 的电话
+            const adminPhones = ['60106650461']; // 填入你们 Admin 的电话列表
 
-            // 3. 准备模板数据
             const routeText = job ? `${job.source_loc} -> ${job.dest_loc}` : "Unknown Route";
             const poText = job && job.po_number ? job.po_number : "N/A";
             const driverName = driver ? driver.company_name : "Unknown Driver";
@@ -1086,7 +1025,6 @@ const app = {
 
             const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
 
-            // 4. 发送给 Admin
             for (const phone of adminPhones) {
                 const payload = {
                     "messaging_product": "whatsapp",
@@ -1106,9 +1044,8 @@ const app = {
         }
     }
 
-}; // <--- 整个 app 对象在这里安全结束
+}; 
 
-// 页面加载完毕后启动应用
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
