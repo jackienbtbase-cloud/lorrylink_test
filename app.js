@@ -994,24 +994,63 @@ const app = {
     // ==========================================
     // --- WHATSAPP NOTIFICATION ---
     // ==========================================
-    async sendAdminWhatsAppAlert(actionType, jobId, price) {
+   async sendAdminWhatsAppAlert(actionType, jobId, price) {
         try {
-            const { data, error } = await supabaseClient.functions.invoke('send-whatsapp', {
-                body: { 
-                    actionType: actionType, 
-                    jobId: jobId, 
-                    price: price,
-                    transporterId: this.currentUser.id 
-                }
-            });
+            const { data: job } = await supabaseClient.from('jobs').select('po_number, source_loc, dest_loc').eq('id', jobId).single();
+            const { data: driver } = await supabaseClient.from('transporters').select('company_name, contact_person, phone').eq('id', this.currentUser.id).single();
 
-            if (error) {
-                console.error("Supabase Edge Function Error:", error);
-            } else {
-                console.log("WhatsApp alert triggered securely via backend!", data);
+            // 这里使用占位符，GitHub Actions 部署时会自动把你的 Secret 填进来，源码里永远不会有明文 Token
+            const ACCESS_TOKEN = '__WHATSAPP_TOKEN__';
+            const PHONE_NUMBER_ID = '1383909324803872'; 
+            const adminPhones = ['60106650461'];
+
+            const routeText = job ? `${job.source_loc} -> ${job.dest_loc}` : "Unknown Route";
+            const poText = job && job.po_number ? job.po_number : "N/A";
+            const driverName = driver ? driver.company_name : "Unknown Driver";
+            const contactText = driver ? `${driver.contact_person} (${driver.phone})` : "N/A";
+            const timeText = new Date().toLocaleTimeString('en-US', { hour12: true });
+
+            const components = [
+                {
+                    "type": "body",
+                    "parameters": [
+                        { "type": "text", "parameter_name": "route", "text": routeText },
+                        { "type": "text", "parameter_name": "po_number", "text": poText },
+                        { "type": "text", "parameter_name": "transporter", "text": driverName },
+                        { "type": "text", "parameter_name": "contact", "text": contactText },
+                        { "type": "text", "parameter_name": "price", "text": `${actionType} - RM ${price}` },
+                        { "type": "text", "parameter_name": "time", "text": timeText }
+                    ]
+                }
+            ];
+
+            const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
+
+            for (const phone of adminPhones) {
+                const payload = {
+                    "messaging_product": "whatsapp",
+                    "to": phone,
+                    "type": "template",
+                    "template": { "name": "tst", "language": { "code": "en" }, "components": components }
+                };
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        console.error("Meta Detailed Error:", data); 
+                    } else {
+                        console.log("WhatsApp sent successfully via GitHub Secret injection!", data);
+                    }
+                })
+                .catch(err => console.error("Network Request Error:", err));
             }
         } catch (error) {
-            console.error("Failed to trigger WhatsApp alert:", error);
+            console.error("Failed to prepare WhatsApp alert:", error);
         }
     }
 
