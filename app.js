@@ -996,60 +996,22 @@ const app = {
     // ==========================================
     async sendAdminWhatsAppAlert(actionType, jobId, price) {
         try {
-            const { data: job } = await supabaseClient.from('jobs').select('po_number, source_loc, dest_loc').eq('id', jobId).single();
-            const { data: driver } = await supabaseClient.from('transporters').select('company_name, contact_person, phone').eq('id', this.currentUser.id).single();
-
-            const ACCESS_TOKEN = 'EAAfPKcbesHUBSjUUzfgLpGkmgsZAwIcoLlQ43zZAMsxqIHuCoONA4elEkhlqx954AXdBLQqvGZAdZCZC6LgZCR5XkIzQ0ohUjHR9eyqqNvwyxvA38dGI5Wi1eYGRoJs4jeAG7ZAUXSX2HSalZC7i1aBoKaXCZC3MUbgZB9lL0jvXmc3IxAwVLsxUejwEw3HIkSx8lZBhwZDZD';
-            const PHONE_NUMBER_ID = '1383909324803872'; 
-            const adminPhones = ['60106650461']; // 填入你们 Admin 的电话列表
-
-            const routeText = job ? `${job.source_loc} -> ${job.dest_loc}` : "Unknown Route";
-            const poText = job && job.po_number ? job.po_number : "N/A";
-            const driverName = driver ? driver.company_name : "Unknown Driver";
-            const contactText = driver ? `${driver.contact_person} (${driver.phone})` : "N/A";
-            const timeText = new Date().toLocaleTimeString('en-US', { hour12: true });
-
-           const components = [
-                {
-                    "type": "body",
-                    "parameters": [
-                        { "type": "text", "parameter_name": "route", "text": routeText },
-                        { "type": "text", "parameter_name": "po_number", "text": poText },
-                        { "type": "text", "parameter_name": "transporter", "text": driverName },
-                        { "type": "text", "parameter_name": "contact", "text": contactText },
-                        { "type": "text", "parameter_name": "price", "text": `${actionType} - RM ${price}` },
-                        { "type": "text", "parameter_name": "time", "text": timeText }
-                    ]
+            const { data, error } = await supabaseClient.functions.invoke('send-whatsapp', {
+                body: { 
+                    actionType: actionType, 
+                    jobId: jobId, 
+                    price: price,
+                    transporterId: this.currentUser.id 
                 }
-            ];
+            });
 
-            const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
-
-            for (const phone of adminPhones) {
-                const payload = {
-                    "messaging_product": "whatsapp",
-                    "to": phone,
-                    "type": "template",
-                    "template": { "name": "tst", "language": { "code": "en" }, "components": components }
-                };
-                
-               fetch(url, {
-				    method: 'POST',
-				    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
-				    body: JSON.stringify(payload)
-				})
-				.then(async response => {
-				    const data = await response.json();
-				    if (!response.ok) {
-				        console.error("Meta Detailed Error:", data); 
-				    } else {
-				        console.log("WhatsApp sent successfully!", data);
-				    }
-				})
-				.catch(err => console.error("Network Request Error:", err));
+            if (error) {
+                console.error("Supabase Edge Function Error:", error);
+            } else {
+                console.log("WhatsApp alert triggered securely via backend!", data);
             }
         } catch (error) {
-            console.error("Failed to prepare WhatsApp alert:", error);
+            console.error("Failed to trigger WhatsApp alert:", error);
         }
     }
 
