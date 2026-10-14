@@ -1033,11 +1033,20 @@ const app = {
                     "template": { "name": "tst", "language": { "code": "en" }, "components": components }
                 };
                 
-                fetch(url, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(err => console.error("WhatsApp API Error:", err));
+               fetch(url, {
+				    method: 'POST',
+				    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+				    body: JSON.stringify(payload)
+				})
+				.then(async response => {
+				    const data = await response.json();
+				    if (!response.ok) {
+				        console.error("Meta Detailed Error:", data); 
+				    } else {
+				        console.log("WhatsApp sent successfully!", data);
+				    }
+				})
+				.catch(err => console.error("Network Request Error:", err));
             }
         } catch (error) {
             console.error("Failed to prepare WhatsApp alert:", error);
