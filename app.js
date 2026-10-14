@@ -1013,12 +1013,12 @@ const app = {
                 {
                     "type": "body",
                     "parameters": [
-                        { "type": "text", "name": "route", "text": routeText },
-                        { "type": "text", "name": "po_number", "text": poText },
-                        { "type": "text", "name": "transporter", "text": driverName },
-                        { "type": "text", "name": "contact", "text": contactText },
-                        { "type": "text", "name": "price", "text": `${actionType} - RM ${price}` },
-                        { "type": "text", "name": "time", "text": timeText }
+                        { "type": "text", "parameter_name": "route", "text": routeText },
+                        { "type": "text", "parameter_name": "po_number", "text": poText },
+                        { "type": "text", "parameter_name": "transporter", "text": driverName },
+                        { "type": "text", "parameter_name": "contact", "text": contactText },
+                        { "type": "text", "parameter_name": "price", "text": `${actionType} - RM ${price}` },
+                        { "type": "text", "parameter_name": "time", "text": timeText }
                     ]
                 }
             ];
