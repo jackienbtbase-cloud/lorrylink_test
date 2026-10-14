@@ -445,7 +445,7 @@ const app = {
         this.showView('counterOffer');
     },
 	
-    async submitCounterOffer(e) Counter-offer submitted successfully!
+    async submitCounterOffer(e) {
         const newPrice = parseFloat(document.getElementById('counter-price').value);
         const newDate = document.getElementById('counter-date').value;
 
@@ -999,16 +999,59 @@ const app = {
             return;
         }
         
-        this.(jobs);
+        this.(jobs);this.renderRecentMarketActivity(jobs);
     },
 
-    renderRecentMarketActivity(jobs) {
+   renderRecentMarketActivity(jobs) {
         const container = document.getElementById('recent-activity-container');
         if (jobs.length === 0) {
             container.innerHTML = '<p class="text-gray-400 text-xs italic">No recent market activity yet.</p>';
             return;
         }
-        // --- WHATSAPP NOTIFICATION ---
+        
+        container.innerHTML = jobs.map(job => {
+            // Format the job posted date
+            let postedDate = 'Unknown date';
+            if (job.created_at) {
+                const dateObj = new Date(job.created_at);
+                postedDate = dateObj.toLocaleDateString('en-MY', { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric' 
+                });
+            }
+
+            return `
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 opacity-60 grayscale transition-all duration-300 hover:grayscale-0 hover:opacity-100">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
+                            <i class="ri-lock-line"></i> Job Awarded
+                        </span>
+                        <span class="text-[10px] text-gray-400 font-medium">Posted: ${postedDate}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-2">
+                        <div class="text-xs text-gray-500 font-medium">
+                            <p class="text-gray-700">${job.source_loc} <i class="ri-arrow-right-line text-gray-400"></i> ${job.dest_loc}</p>
+                            <p class="mt-0.5"><i class="ri-box-3-line"></i> ${job.quantity} ${job.item_desc}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Closed At</p>
+                            <p class="font-bold text-gray-600">RM ${job.accepted_price || job.offered_price}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 bg-gray-200 text-gray-500 text-[10px] p-1.5 rounded text-center font-semibold italic">
+                        Claimed! Check the board daily to secure the next load.
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }, // <--- 注意：原代码就是少了这里的一个逗号，导致报错
+
+    // ==========================================
+    // --- WHATSAPP NOTIFICATION ---
+    // ==========================================
     async sendAdminWhatsAppAlert(actionType, jobId, price) {
         try {
             // 1. 从数据库实时抓取这个订单的路线和司机的名字/电话
@@ -1016,9 +1059,9 @@ const app = {
             const { data: driver } = await supabaseClient.from('transporters').select('company_name, contact_person, phone').eq('id', this.currentUser.id).single();
 
             // 2. 填入你的 Meta 凭证
-            const ACCESS_TOKEN = 'EAAfPKcbesHUBSvcROxjHYhBO1GIk5O6K8v8fTfcPQ4uuvavzhQeJHJcuZB4dzW65BoubybbyRQs944hXTyDc1nC1snMeJVjil2CotHepwLkcMO6CrX6o2vpMVS4nivLZB91D7bBss5KZCPwd236eb0o8NZAHaE0znjZCnA2EKyB1zlIpYqhHF56twmyx9sQESh7Y9io207JyOagXpQDLwauzr8eRqBwyVJYrGx3iXwktQtEj6ozDxYdZAIBt3OhbwL4OIOF2tQYJvrCtZApKkknCjqSegZDZD'; // 换成你刚才复制的 Token
-            const PHONE_NUMBER_ID = '1383909324803872'; // 换成你的 Phone Number ID
-            const adminPhones = ['60106650461']; // 你们 4 个 Admin 的电话
+            const ACCESS_TOKEN = 'EAAfPKcbesHUBSvcROxjHYhBO1GIk5O6K8v8fTfcPQ4uuvavzhQeJHJcuZB4dzW65BoubybbyRQs944hXTyDc1nC1snMeJVjil2CotHepwLkcMO6CrX6o2vpMVS4nivLZB91D7bBss5KZCPwd236eb0o8NZAHaE0znjZCnA2EKyB1zlIpYqhHF56twmyx9sQESh7Y9io207JyOagXpQDLwauzr8eRqBwyVJYrGx3iXwktQtEj6ozDxYdZAIBt3OhbwL4OIOF2tQYJvrCtZApKkknCjqSegZDZD';
+            const PHONE_NUMBER_ID = '1383909324803872'; 
+            const adminPhones = ['60106650461']; // 你们 Admin 的电话
 
             // 3. 准备模板数据
             const routeText = job ? `${job.source_loc} -> ${job.dest_loc}` : "Unknown Route";
@@ -1043,7 +1086,7 @@ const app = {
 
             const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
 
-            // 4. 发送给 4 个 Admin
+            // 4. 发送给 Admin
             for (const phone of adminPhones) {
                 const payload = {
                     "messaging_product": "whatsapp",
@@ -1062,49 +1105,10 @@ const app = {
             console.error("Failed to prepare WhatsApp alert:", error);
         }
     }
-        container.innerHTML = jobs.map(job => {
-            // Format the job posted date
-            let postedDate = 'Unknown date';
-            if (job.created_at) {
-                const dateObj = new Date(job.created_at);
-                postedDate = dateObj.toLocaleDateString('en-MY', { 
-                    day: '2-digit', 
-                    month: 'short', 
-                    year: 'numeric' 
-                });
-            }
 
-            return `
-                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 opacity-60 grayscale transition-all duration-300 hover:grayscale-0 hover:opacity-100">
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
-                            <i class="ri-lock-line"></i> Job Awarded
-                        </span>
-                        <!-- NEW: Added Posted Date here -->
-                        <span class="text-[10px] text-gray-400 font-medium">Posted: ${postedDate}</span>
-                    </div>
-                    
-                    <div class="flex justify-between items-center mt-2">
-                        <div class="text-xs text-gray-500 font-medium">
-                            <p class="text-gray-700">${job.source_loc} <i class="ri-arrow-right-line text-gray-400"></i> ${job.dest_loc}</p>
-                            <p class="mt-0.5"><i class="ri-box-3-line"></i> ${job.quantity} ${job.item_desc}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Closed At</p>
-                            <!-- Uses accepted_price if available, falls back to original budget -->
-                            <p class="font-bold text-gray-600">RM ${job.accepted_price || job.offered_price}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-3 bg-gray-200 text-gray-500 text-[10px] p-1.5 rounded text-center font-semibold italic">
-                        Claimed! Check the board daily to secure the next load.
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-};
+}; // <--- 整个 app 对象在这里安全结束
 
+// 页面加载完毕后启动应用
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
