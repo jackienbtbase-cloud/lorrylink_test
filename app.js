@@ -473,6 +473,8 @@ const app = {
             .eq('id', jobId)
             .single();
 
+		console.log("Job unloading_service status:", job ? job.unloading_service : "Job data not found");
+		
         if (jobError) {
             container.innerHTML = `<p class="text-red-500 text-sm">Error loading job details: ${jobError.message}</p>`;
             return;
