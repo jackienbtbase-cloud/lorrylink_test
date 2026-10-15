@@ -536,7 +536,7 @@ const app = {
                     <span><i class="ri-time-line"></i> ${postedAt}</span>
                 </div>
                 
-               ${(job.photo_1_url || job.photo_2_url || job.unloading_service) ? `
+                ${(job.photo_1_url || job.photo_2_url || job.unloading_service) ? `
                     <div class="flex flex-col gap-2 mt-2 pt-2 border-t border-blue-200/50">
                         ${job.unloading_service ? `
                             <div>
@@ -554,6 +554,7 @@ const app = {
                         ` : ''}
                     </div>
                 ` : ''}
+            </div>
         `;
 
         if (bids.length === 0) {
