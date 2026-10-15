@@ -503,7 +503,7 @@ const app = {
             hour: '2-digit', minute: '2-digit', hour12: true 
         }) : 'Unknown time';
         
-        let html = `
+       let html = `
             <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 flex flex-col gap-2 shadow-sm">
                 <div class="flex justify-between items-start border-b border-blue-200 pb-2">
                     <div class="flex items-center flex-wrap gap-1 font-bold text-sm">
@@ -527,7 +527,6 @@ const app = {
                     <span>Items:</span>
                     <span><i class="ri-box-3-line"></i> ${quantity} ${itemDesc}</span>
                 </div>
-                ${job.unloading_service ? `<div class="mt-0.5"><span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded inline-block w-max"><i class="ri-hand-coin-line"></i> Unloading Required</span></div>` : ''}
                 <div class="flex justify-between text-xs font-semibold opacity-80 mt-0.5">
                     <span>Remarks:</span>
                     <span class="text-right max-w-[70%] break-words"><i class="ri-sticky-note-line"></i> ${remarks}</span>
@@ -536,10 +535,23 @@ const app = {
                     <span>Posted On:</span>
                     <span><i class="ri-time-line"></i> ${postedAt}</span>
                 </div>
-                ${(job.photo_1_url || job.photo_2_url) ? `
-                    <div class="flex gap-2 mt-2 pt-2 border-t border-blue-200/50">
-                        ${job.photo_1_url ? `<a href="${job.photo_1_url}" target="_blank" class="block h-12 w-12 overflow-hidden rounded border border-blue-200 shadow-sm hover:opacity-80"><img src="${job.photo_1_url}" class="h-full w-full object-cover"></a>` : ''}
-                        ${job.photo_2_url ? `<a href="${job.photo_2_url}" target="_blank" class="block h-12 w-12 overflow-hidden rounded border border-blue-200 shadow-sm hover:opacity-80"><img src="${job.photo_2_url}" class="h-full w-full object-cover"></a>` : ''}
+                
+                ${(job.photo_1_url || job.photo_2_url || job.unloading_service) ? `
+                    <div class="flex flex-col gap-2 mt-2 pt-2 border-t border-blue-200/50">
+                        ${job.unloading_service ? `
+                            <div>
+                                <span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded shadow-sm inline-block">
+                                    <i class="ri-hand-coin-line"></i> Unloading Required
+                                </span>
+                            </div>
+                        ` : ''}
+                        
+                        ${(job.photo_1_url || job.photo_2_url) ? `
+                            <div class="flex gap-2">
+                                ${job.photo_1_url ? `<a href="${job.photo_1_url}" target="_blank" class="block h-12 w-12 overflow-hidden rounded border border-blue-200 shadow-sm hover:opacity-80"><img src="${job.photo_1_url}" class="h-full w-full object-cover"></a>` : ''}
+                                ${job.photo_2_url ? `<a href="${job.photo_2_url}" target="_blank" class="block h-12 w-12 overflow-hidden rounded border border-blue-200 shadow-sm hover:opacity-80"><img src="${job.photo_2_url}" class="h-full w-full object-cover"></a>` : ''}
+                            </div>
+                        ` : ''}
                     </div>
                 ` : ''}
             </div>
