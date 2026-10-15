@@ -780,7 +780,7 @@ const app = {
                    <div class="flex flex-col gap-1 text-sm mb-3">
 					    <div class="font-bold text-gray-800 text-base flex flex-col items-start gap-1">
 					        <span class="flex items-center gap-1">${job.source_loc}${job.source_maps_link ? `<a href="${job.source_maps_link}" target="_blank" class="text-blue-500 hover:text-blue-700" title="View Source"><i class="ri-map-pin-user-fill text-lg"></i></a>` : ''}</span>
-					        <div class="w-full flex justify-center py-0.5 text-blue-400">
+					        <div class="pl-2 py-0.5 text-blue-400">
 					            <i class="ri-arrow-down-line font-bold text-lg"></i>
 					        </div>
 					        <span class="flex items-center gap-1">${job.dest_loc}${job.dest_maps_link ? `<a href="${job.dest_maps_link}" target="_blank" class="text-blue-500 hover:text-blue-700" title="View Destination"><i class="ri-map-pin-user-fill text-lg"></i></a>` : ''}</span>
@@ -901,7 +901,7 @@ const app = {
                         <i class="ri-map-pin-line text-gray-400"></i> ${job.source_loc}
                         ${job.source_maps_link ? `<a href="${job.source_maps_link}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="View on Maps"><i class="ri-map-pin-user-fill text-lg"></i></a>` : ''}
                     </p>
-					<div class="w-full flex justify-center py-1 text-blue-500">
+					<div class="pl-6 py-0.5 text-blue-500">
 				        <i class="ri-arrow-down-line font-bold text-lg"></i>
 				    </div>
                     <p class="font-semibold flex items-center gap-1">
