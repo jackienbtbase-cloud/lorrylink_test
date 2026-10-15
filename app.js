@@ -472,8 +472,6 @@ const app = {
             .select('offered_price, delivery_date, source_loc, dest_loc, quantity, item_desc, po_number, photo_1_url, photo_2_url, source_maps_link, dest_maps_link, remarks, created_at, unloading_service')
             .eq('id', jobId)
             .single();
-
-		console.log("Job unloading_service status:", job ? job.unloading_service : "Job data not found");
 		
         if (jobError) {
             container.innerHTML = `<p class="text-red-500 text-sm">Error loading job details: ${jobError.message}</p>`;
